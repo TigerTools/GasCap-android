@@ -24,6 +24,7 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
@@ -69,12 +70,12 @@ public class Home extends Activity implements OAuthCallback {
 
         loggedIn = false;
 
-        String filename = App_Gas.getAppContext().getFilesDir() + getString(R.string.oauth_user_cache);
+        File file = new File(App_Gas.getAppContext().getFilesDir(), getString(R.string.oauth_user_cache));
 
         try {
             DataInputStream dis =
                     new DataInputStream (
-                            new FileInputStream(filename));
+                            new FileInputStream(file.getAbsolutePath()));
 
             byte[] datainBytes = new byte[dis.available()];
             dis.readFully(datainBytes);
@@ -85,7 +86,7 @@ public class Home extends Activity implements OAuthCallback {
             e.printStackTrace();
         };
 
-        if (user_content != null) {
+        if (user_content != null && user_content != "") {
             try {
                 JSONObject result = new JSONObject(user_content);
                 if (result.has("email")) {
@@ -116,30 +117,31 @@ public class Home extends Activity implements OAuthCallback {
 
         else if (loggedIn == false){
             this.setContentView(R.layout.activity_login);
+            final OAuth o = new OAuth(this);
+            o.initialize("4_wlfPF3Bc7If-Dz6uNLz-8b2ow"); // Initialize the oauth key
+            facebookButton = (Button) findViewById(R.id.facebook);
+            googleButton = (Button) findViewById(R.id.google);
+            facebookText = (TextView) findViewById(R.id.facebookText);
+            googleText = (TextView) findViewById(R.id.googleText);
+
+            facebookButton.setOnClickListener(new View.OnClickListener() { // Listen the on click event
+                @Override
+                public void onClick(View v)
+                {
+                    o.popup("facebook", Home.this); // Launch the pop up with the right provider & callback
+                }
+            });
+
+            googleButton.setOnClickListener(new View.OnClickListener() { // Listen the on click event
+                @Override
+                public void onClick(View v)
+                {
+                    o.popup("google", Home.this); // Launch the pop up with the right provider & callback
+                }
+            });
         }
 
-        final OAuth o = new OAuth(this);
-        o.initialize("4_wlfPF3Bc7If-Dz6uNLz-8b2ow"); // Initialize the oauth key
-        facebookButton = (Button) findViewById(R.id.facebook);
-        googleButton = (Button) findViewById(R.id.google);
-        facebookText = (TextView) findViewById(R.id.facebookText);
-        googleText = (TextView) findViewById(R.id.googleText);
 
-        facebookButton.setOnClickListener(new View.OnClickListener() { // Listen the on click event
-            @Override
-            public void onClick(View v)
-            {
-                o.popup("facebook", Home.this); // Launch the pop up with the right provider & callback
-            }
-        });
-
-        googleButton.setOnClickListener(new View.OnClickListener() { // Listen the on click event
-            @Override
-            public void onClick(View v)
-            {
-                o.popup("google", Home.this); // Launch the pop up with the right provider & callback
-            }
-        });
 
     }
 
@@ -207,12 +209,12 @@ public class Home extends Activity implements OAuthCallback {
                         }
                     }
 
-                    String filename = App_Gas.getAppContext().getFilesDir() + getString(R.string.oauth_user_cache);
+                    File file = new File(App_Gas.getAppContext().getFilesDir(), getString(R.string.oauth_user_cache));
                     String string = result.toString();
                     FileOutputStream outputStream;
 
                     try {
-                        outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+                        outputStream = openFileOutput(file.getAbsolutePath(), Context.MODE_PRIVATE);
                         outputStream.write(string.getBytes());
                         outputStream.close();
                     } catch (Exception e) {
