@@ -16,6 +16,7 @@
         android:theme="@style/AppTheme" >
         
         <activity android:name="tools.tiger.gascap.Home"
+            android:launchMode="singleTop"
             android:label="@string/title_activity_home"
             >
             <intent-filter>

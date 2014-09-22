@@ -1,44 +1,57 @@
 package tools.tiger.gascap;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
-import android.content.pm.Signature;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.Signature;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import org.json.JSONArray;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-import android.os.StrictMode;
-import android.graphics.Color;
-import android.widget.Button;
-import android.widget.TextView;
-import io.oauth.*;
+import io.oauth.OAuth;
+import io.oauth.OAuthCallback;
+import io.oauth.OAuthData;
+import io.oauth.OAuthRequest;
+import tools.tiger.gascap.app.App_Gas;
 
 
 public class Home extends Activity implements OAuthCallback {
 
+    private static Context mContext;
     Button facebookButton;
     Button googleButton;
     TextView facebookText;
     TextView googleText;
-    boolean loggedIn;
+    private String email;
+    private boolean loggedIn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        String user_content = null;
         super.onCreate(savedInstanceState);
 
         try {
@@ -55,6 +68,47 @@ public class Home extends Activity implements OAuthCallback {
         }
 
         loggedIn = false;
+
+        String filename = App_Gas.getAppContext().getFilesDir() + getString(R.string.oauth_user_cache);
+
+        try {
+            DataInputStream dis =
+                    new DataInputStream (
+                            new FileInputStream(filename));
+
+            byte[] datainBytes = new byte[dis.available()];
+            dis.readFully(datainBytes);
+            dis.close();
+
+            user_content = new String(datainBytes, 0, datainBytes.length);
+        } catch (Exception e) {
+            e.printStackTrace();
+        };
+
+        if (user_content != null) {
+            try {
+                JSONObject result = new JSONObject(user_content);
+                if (result.has("email")) {
+                    email = result.getString("email");
+                    Log.d("email", email);
+                    loggedIn = true;
+                } else {
+                    JSONArray emails = result.getJSONArray("emails");
+                    JSONObject emailObj = emails.getJSONObject(0);
+                    try {
+                        email = emailObj.getString("value");
+                        Log.d("email", email);
+                        loggedIn = true;
+                    } catch (JSONException e) {
+                        Log.d("obj:", emailObj.toString());
+                    }
+                }
+
+            } catch (Throwable t) {
+                Log.e("Home", "Could not parse malformed JSON: \"");
+            }
+        }
+
         /* Check login status */
         if (loggedIn == true){
             this.setContentView(R.layout.activity_home);
@@ -141,16 +195,30 @@ public class Home extends Activity implements OAuthCallback {
                     JSONObject result = new JSONObject(total.toString());
                     if (result.has("email")) {
                         email = result.getString("email");
+                        Log.d("email", email);
                     } else {
                         JSONArray emails = result.getJSONArray("emails");
                         JSONObject emailObj = emails.getJSONObject(0);
                         try {
                             email = emailObj.getString("value");
+                            Log.d("email", email);
                         } catch (JSONException e) {
                             Log.d("obj:", emailObj.toString());
                         }
                     }
-                    textview.setText("hello, " + email);
+
+                    String filename = App_Gas.getAppContext().getFilesDir() + getString(R.string.oauth_user_cache);
+                    String string = result.toString();
+                    FileOutputStream outputStream;
+
+                    try {
+                        outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+                        outputStream.write(string.getBytes());
+                        outputStream.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -161,6 +229,10 @@ public class Home extends Activity implements OAuthCallback {
                 textview.setText("error: " + message);
             }
         });
+
+        Intent intent = getIntent();
+        finish();
+        startActivity(intent);
 
     }
 

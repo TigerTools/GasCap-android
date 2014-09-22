@@ -2,6 +2,7 @@
 <resources>
 
     <string name="app_name">GasCap</string>
+    <string name="oauth_user_cache">oauth_user</string>
     <string name="title_activity_my">Welcome</string>
     <string name="action_settings">Settings</string>
     <string name="log_fill_request_btn_txt">Log Fill</string>

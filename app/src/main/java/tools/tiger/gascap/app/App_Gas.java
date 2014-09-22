@@ -1,5 +1,7 @@
 package tools.tiger.gascap.app;
+
 import android.app.Application;
+import android.content.Context;
 
 /**
  * Created by jgreathouse on 9/18/2014.
@@ -7,11 +9,16 @@ import android.app.Application;
 
 public class App_Gas  extends Application {
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
+    private static Context context;
 
+    public void onCreate(){
+        super.onCreate();
+        App_Gas.context = getApplicationContext();
         init();
+    }
+
+    public static Context getAppContext() {
+        return App_Gas.context;
     }
 
 
