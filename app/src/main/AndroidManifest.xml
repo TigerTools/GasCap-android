@@ -24,6 +24,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name="tools.tiger.gascap.Vehicle"
+            android:label="@string/title_activity_vehicle"
+            android:parentActivityName="tools.tiger.gascap.Home">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value="tools.tiger.gascap.Home" />
+        </activity>
     </application>
 
 </manifest>

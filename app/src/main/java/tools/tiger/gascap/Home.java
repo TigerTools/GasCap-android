@@ -18,14 +18,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.android.volley.Request;
+import com.android.volley.Request.Method;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
-import com.android.volley.Request.Method;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -73,6 +70,7 @@ public class Home extends Activity implements OAuthCallback {
     protected void onCreate(Bundle savedInstanceState) {
         String user_content = null;
         String token_content = null;
+        String vehicle_content = null;
         byte[] datainBytes = new byte[0];
         super.onCreate(savedInstanceState);
 
@@ -141,7 +139,7 @@ public class Home extends Activity implements OAuthCallback {
                 }
 
             } catch (Throwable t) {
-                Log.e("Home", "Could not parse malformed JSON: \"");
+                Log.e("Home", "Could not parse user_content JSON: \"");
             }
         }
 
@@ -183,7 +181,42 @@ public class Home extends Activity implements OAuthCallback {
                         Log.d("apiToken", apiToken);
                     }
                 } catch (Throwable t) {
-                    Log.e("Home", "Could not parse malformed Api Token JSON: \"");
+                    Log.e("Home", "Could not parse Api Token JSON: \"");
+                }
+            }
+
+            datainBytes = new byte[0];
+            File vehicleFile = new File(storagePath, getString(R.string.api_vehicle_cache));
+            if (!tokenFile.exists()) {
+                try {
+                    vehicleFile.createNewFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            try {
+                DataInputStream dis =
+                        new DataInputStream (
+                                new FileInputStream(vehicleFile));
+
+                datainBytes = new byte[dis.available()];
+                dis.readFully(datainBytes);
+                dis.close();
+
+                vehicle_content = new String(datainBytes, 0, datainBytes.length);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            if (datainBytes.length > 0) {
+                try {
+                    JSONObject result = new JSONObject(vehicle_content);
+                    if (result.has("name")) {
+                        apiVehicle = result.getString("year") + ", " + result.getString("make") + " - " + result.getString("name");
+                        Log.d("apiVehicle", apiVehicle);
+                    }
+                } catch (Throwable t) {
+                    Log.e("Home", "Could not parse Api Vehicle JSON: \"");
                 }
             }
 

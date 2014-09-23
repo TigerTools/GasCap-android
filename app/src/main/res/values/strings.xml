@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string name="app_name">GasCap</string>
     <string name="tigertools_api_protocol">http://</string>
     <string name="tigertools_api_endppoint">10.0.2.2</string>
     <string name="tigertools_api_port">8000</string>
     <string name="cache_dir">cache</string>
     <string name="oauth_user_cache">oauth_user</string>
+    <string name="api_vehicle_cache">api_vehicle</string>
     <string name="api_token_cache">api_token</string>
     <string name="title_activity_my">Welcome</string>
     <string name="action_settings">Settings</string>
@@ -14,5 +16,7 @@
     <string name="title_activity_home">GasCap</string>
     <string name="login_facebook_button">Login With Facebook</string>
     <string name="login_google_button">Login With Google</string>
+    <string name="title_activity_vehicle">Vehicle</string>
+    <string name="hello_world">Hello world!</string>
 
 </resources>
