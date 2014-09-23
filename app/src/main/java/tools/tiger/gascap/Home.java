@@ -210,9 +210,10 @@ public class Home extends Activity implements OAuthCallback {
 
             if (datainBytes.length > 0) {
                 try {
-                    JSONObject result = new JSONObject(vehicle_content);
-                    if (result.has("name")) {
-                        apiVehicle = result.getString("year") + ", " + result.getString("make") + " - " + result.getString("name");
+                    JSONArray result = new JSONObject(vehicle_content);
+                    if (result.length() > 0) {
+                        JSONObject vehicle = result.getJSONObject(0);
+                        apiVehicle = vehicle.getString("year") + ", " + vehicle.getString("make") + " - " + vehicle.getString("name");
                         Log.d("apiVehicle", apiVehicle);
                     }
                 } catch (Throwable t) {
