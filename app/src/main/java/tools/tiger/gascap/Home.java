@@ -187,7 +187,7 @@ public class Home extends Activity implements OAuthCallback {
 
             datainBytes = new byte[0];
             File vehicleFile = new File(storagePath, getString(R.string.api_vehicle_cache));
-            if (!tokenFile.exists()) {
+            if (!vehicleFile.exists()) {
                 try {
                     vehicleFile.createNewFile();
                 } catch (IOException e) {
@@ -210,7 +210,7 @@ public class Home extends Activity implements OAuthCallback {
 
             if (datainBytes.length > 0) {
                 try {
-                    JSONArray result = new JSONObject(vehicle_content);
+                    JSONArray result = new JSONArray(vehicle_content);
                     if (result.length() > 0) {
                         JSONObject vehicle = result.getJSONObject(0);
                         apiVehicle = vehicle.getString("year") + ", " + vehicle.getString("make") + " - " + vehicle.getString("name");
@@ -282,7 +282,9 @@ public class Home extends Activity implements OAuthCallback {
                 queue.add(tokenReq);
 
             } else if (apiVehicle == "") {
-
+                Intent intent = new Intent(this, Vehicle.class);
+                finish();
+                startActivity(intent);
             } else {
                 this.setContentView(R.layout.activity_home);
             }

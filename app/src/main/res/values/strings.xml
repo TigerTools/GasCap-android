@@ -17,6 +17,9 @@
     <string name="login_facebook_button">Login With Facebook</string>
     <string name="login_google_button">Login With Google</string>
     <string name="title_activity_vehicle">Vehicle</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="vehicle_save_text">Save</string>
+    <string name="vehicle_name_hint">Model</string>
+    <string name="vehicle_make_hint">Make</string>
+    <string name="vehicle_form_title">Enter your vehicle information</string>
 
 </resources>
