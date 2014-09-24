@@ -67,7 +67,7 @@
         android:onClick="saveVehicle" />
 
     <TextView
-        android:text=""
+        android:text="Please Enter your Vehicle Information"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAlignment="center"

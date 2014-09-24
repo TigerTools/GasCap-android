@@ -66,6 +66,8 @@ public class Home extends Activity implements OAuthCallback {
     private String apiToken = "";
     private String apiVehicle = "";
 
+    public final static String API_TOKEN = "tools.tiger.gascap.API_TOKEN";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         String user_content = null;
@@ -283,6 +285,7 @@ public class Home extends Activity implements OAuthCallback {
 
             } else if (apiVehicle == "") {
                 Intent intent = new Intent(this, Vehicle.class);
+                intent.putExtra(API_TOKEN, apiToken);
                 finish();
                 startActivity(intent);
             } else {
