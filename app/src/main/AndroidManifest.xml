@@ -9,7 +9,7 @@
         android:targetSdkVersion="19.1.0" />
 
     <application
-        android:name="tools.tiger.gascap.app.App_Gas"
+        android:name=".app.GasApp"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
@@ -31,6 +31,13 @@
             <meta-data android:name="android.support.PARENT_ACTIVITY"
                 android:value="tools.tiger.gascap.Home" />
         </activity>
-    </application>
 
+        <activity android:name="tools.tiger.gascap.LogFill"
+            android:label="@string/title_activity_log_fill"
+            android:parentActivityName="tools.tiger.gascap.Home">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value="tools.tiger.gascap.Home" />
+        </activity>
+
+    </application>
 </manifest>

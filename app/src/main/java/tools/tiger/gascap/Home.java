@@ -1,16 +1,10 @@
 package tools.tiger.gascap;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.pm.Signature;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,36 +12,29 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.android.volley.Request.Method;
+import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 
 import io.oauth.OAuth;
 import io.oauth.OAuthCallback;
 import io.oauth.OAuthData;
 import io.oauth.OAuthRequest;
-import tools.tiger.gascap.app.App_Gas;
+
+import tools.tiger.gascap.app.GasApi;
 import tools.tiger.gascap.app.GasClient;
+import tools.tiger.gascap.app.JsonGasRequest;
 
 
 public class Home extends Activity implements OAuthCallback {
@@ -56,12 +43,9 @@ public class Home extends Activity implements OAuthCallback {
     Button googleButton;
     TextView facebookText;
     TextView googleText;
-    private String keyHash;
-    private String urlKeyHash;
-    private String storagePath;
     private String email;
-    private String token;
     private String urlEmail;
+    private String urlKeyHash;
     private boolean loggedIn = false;
     private String apiToken = "";
     private String apiVehicle = "";
@@ -70,227 +54,85 @@ public class Home extends Activity implements OAuthCallback {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        String user_content = null;
-        String token_content = null;
-        String vehicle_content = null;
-        byte[] datainBytes = new byte[0];
         super.onCreate(savedInstanceState);
-
-        storagePath = App_Gas.getAppContext().getFilesDir().getAbsolutePath();
-        App_Gas.getAppContext().getFilesDir().mkdirs();
+        Intent intent = getIntent();
+        apiToken = intent.getStringExtra(Home.API_TOKEN);
+        urlKeyHash = GasApi.getUrlHash(this, "tools.tiger.gascap");
+        JSONObject user = GasApi.getJSONObjectFileContent(getString(R.string.oauth_user_cache));
+        Log.d("user result", user.toString());
 
         try {
-            PackageInfo info = getPackageManager().getPackageInfo("tools.tiger.gascap", PackageManager.GET_SIGNATURES);
-            for (Signature signature : info.signatures) {
-                MessageDigest md = MessageDigest.getInstance("SHA");
-                md.update(signature.toByteArray());
-                keyHash = Base64.encodeToString(md.digest(), Base64.DEFAULT);
+            if (user.has("email")) {
+                email = user.getString("email");
+                loggedIn = true;
+            } else {
+                JSONArray emails = user.getJSONArray("emails");
+                JSONObject emailObj = emails.getJSONObject(0);
                 try {
-                    urlKeyHash = URLEncoder.encode(keyHash.trim(), "UTF-8");
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-                Log.d("keyHash:", keyHash);
-                Log.d("urlKeyHash:", urlKeyHash);
-            }
-        } catch (NameNotFoundException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-
-        File oauthFile = new File(storagePath, getString(R.string.oauth_user_cache));
-        if (!oauthFile.exists()) {
-            try {
-                oauthFile.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        try {
-            DataInputStream dis =
-                    new DataInputStream (
-                            new FileInputStream(oauthFile));
-
-            datainBytes = new byte[dis.available()];
-            dis.readFully(datainBytes);
-            dis.close();
-            user_content = new String(datainBytes, 0, datainBytes.length);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        Log.d("user_content", user_content);
-        if (datainBytes.length > 0) {
-            try {
-                JSONObject result = new JSONObject(user_content);
-                if (result.has("email")) {
-                    email = result.getString("email");
-                    Log.d("email", email);
+                    email = emailObj.getString("email");
                     loggedIn = true;
-                } else {
-                    JSONArray emails = result.getJSONArray("emails");
-                    JSONObject emailObj = emails.getJSONObject(0);
-                    try {
-                        email = emailObj.getString("value");
-                        Log.d("email", email);
-                        loggedIn = true;
-                    } catch (JSONException e) {
-                        Log.d("obj:", emailObj.toString());
-                    }
+                } catch (JSONException e) {
+                    Log.d("email", e.getMessage());
                 }
-
-            } catch (Throwable t) {
-                Log.e("Home", "Could not parse user_content JSON: \"");
             }
+        } catch (JSONException e) {
+            Log.d("email", e.getMessage());
         }
 
-        /* Check login status */
         if (loggedIn == true) {
             try {
                 urlEmail = URLEncoder.encode(email, "UTF-8");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-            datainBytes = new byte[0];
-            File tokenFile = new File(storagePath, getString(R.string.api_token_cache));
-            if (!tokenFile.exists()) {
-                try {
-                    tokenFile.createNewFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+
+            JSONObject token = GasApi.getJSONObjectFileContent(getString(R.string.api_token_cache));
+            Log.d("token result", token.toString());
+
             try {
-                DataInputStream dis =
-                        new DataInputStream (
-                                new FileInputStream(tokenFile));
-
-                datainBytes = new byte[dis.available()];
-                dis.readFully(datainBytes);
-                dis.close();
-
-                token_content = new String(datainBytes, 0, datainBytes.length);
-            } catch (Exception e) {
-                e.printStackTrace();
+                apiToken = token.getString("key");
+                Log.d("apiToken", apiToken);
+            } catch (JSONException e) {
+                Log.d("apiToken", e.getMessage());
             }
 
-            if (datainBytes.length > 0) {
-                try {
-                    JSONObject result = new JSONObject(token_content);
-                    if (result.has("key")) {
-                        apiToken = result.getString("key");
-                        Log.d("apiToken", apiToken);
-                    }
-                } catch (Throwable t) {
-                    Log.e("Home", "Could not parse Api Token JSON: \"");
-                }
-            }
+            JSONArray vehicles = GasApi.getJSONArrayFileContent(getString(R.string.api_vehicle_cache));
+            Log.d("vehicle result", vehicles.toString());
 
-            datainBytes = new byte[0];
-            File vehicleFile = new File(storagePath, getString(R.string.api_vehicle_cache));
-            if (!vehicleFile.exists()) {
-                try {
-                    vehicleFile.createNewFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
             try {
-                DataInputStream dis =
-                        new DataInputStream (
-                                new FileInputStream(vehicleFile));
-
-                datainBytes = new byte[dis.available()];
-                dis.readFully(datainBytes);
-                dis.close();
-
-                vehicle_content = new String(datainBytes, 0, datainBytes.length);
-            } catch (Exception e) {
-                e.printStackTrace();
+                JSONObject vehicle = vehicles.getJSONObject(0);
+                apiVehicle = vehicle.getString("year") + ", " + vehicle.getString("make") + " - " + vehicle.getString("name");
+                Log.d("apiVehicle", apiVehicle);
+            } catch (JSONException e) {
+                Log.d("apiVehicle", e.getMessage());
             }
 
-            if (datainBytes.length > 0) {
-                try {
-                    JSONArray result = new JSONArray(vehicle_content);
-                    if (result.length() > 0) {
-                        JSONObject vehicle = result.getJSONObject(0);
-                        apiVehicle = vehicle.getString("year") + ", " + vehicle.getString("make") + " - " + vehicle.getString("name");
-                        Log.d("apiVehicle", apiVehicle);
-                    }
-                } catch (Throwable t) {
-                    Log.e("Home", "Could not parse Api Vehicle JSON: \"");
-                }
-            }
-
-
-            if (apiToken == "") {
-                // Instantiate the RequestQueue.
-                RequestQueue queue = GasClient.getRequestQueue();
-                String url = getString(R.string.tigertools_api_protocol)
-                             + getString(R.string.tigertools_api_endppoint)
-                             + ":" + getString(R.string.tigertools_api_port)
-                             + "/token?hashkey=" + urlKeyHash
-                             + "&email=" +  urlEmail;
-
-                JsonObjectRequest tokenReq = new JsonObjectRequest(Method.GET,
-                        url,
-                        null,
-                        new Response.Listener<JSONObject>() {
-                            @Override
-                            public void onResponse(JSONObject response) {
-                                Log.d("raw_token_resp", response.toString());
-                                try {
-                                    if (response.has("key")) {
-                                        token = response.getString("key");
-                                        Log.d("token", token);
-                                    }
-
-                                    File file = new File(storagePath, getString(R.string.api_token_cache));
-                                    if (!file.exists()) {
-                                        try {
-                                            file.createNewFile();
-                                        } catch (IOException e) {
-                                            e.printStackTrace();
-                                        }
-                                    } else {
-                                        file.delete();
-                                        file.createNewFile();
-                                    }
-                                    String string = response.toString();
-                                    FileOutputStream outputStream;
-
-                                    try {
-                                        outputStream = openFileOutput(getString(R.string.api_token_cache), Context.MODE_PRIVATE);
-                                        outputStream.write(string.getBytes());
-                                        outputStream.close();
-                                        Intent intent = getIntent();
-                                        finish();
-                                        startActivity(intent);
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        },
-                        new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Log.d("token", "Remote Call Failed");
-                            }
-                        });
+            if (apiToken == null) {
+                final RequestQueue queue = GasClient.getRequestQueue();
+                String resource = "token?hashkey=" + urlKeyHash + "&email=" + urlEmail;
+                Response.Listener<JSONObject> listener = getTokenListener();
+                JsonGasRequest tokenReq = GasApi.request(resource, apiToken, listener);
                 queue.add(tokenReq);
-
-            } else if (apiVehicle == "") {
-                Intent intent = new Intent(this, Vehicle.class);
-                intent.putExtra(API_TOKEN, apiToken);
-                finish();
-                startActivity(intent);
-            } else {
-                this.setContentView(R.layout.activity_home);
             }
+
+            if (apiVehicle == "") {
+                Intent vehicleIntent = new Intent(this, Vehicle.class);
+                vehicleIntent.putExtra(API_TOKEN, apiToken);
+                startActivity(vehicleIntent);
+            }
+
+            this.setContentView(R.layout.activity_home);
+            Button logFillButton = (Button) findViewById(R.id.log_fill_button);
+            final Intent logFillIntent = new Intent(this, LogFill.class);
+            logFillButton.setOnClickListener(new View.OnClickListener() { // Listen the on click event
+                @Override
+                public void onClick(View v)
+                {
+                    logFillIntent.putExtra(API_TOKEN, apiToken);
+                    startActivity(logFillIntent);
+                }
+            });
+
         }
 
         else if (loggedIn == false){
@@ -318,7 +160,47 @@ public class Home extends Activity implements OAuthCallback {
                 }
             });
         }
+    }
 
+    private void doVehicleRequest(String apiToken) {
+        final RequestQueue queue = GasClient.getRequestQueue();
+        String resource = "gas/vehicles/";
+        Response.Listener<JSONArray> listener = this.getVehicleListener();
+        JsonGasRequest vehicleReq = GasApi.request(Request.Method.GET, resource, apiToken, listener);
+        queue.add(vehicleReq);
+    }
+
+    private Response.Listener<JSONObject> getTokenListener() {
+        Response.Listener<JSONObject> listener = new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                String apiToken = "";
+                Log.d("token response", response.toString());
+                try {
+                    apiToken = response.getString("key");
+                } catch (Exception e) {
+                    Log.d("getTokenListener", "Token failure: apiToken=\"" + apiToken + "\"");
+                }
+                GasApi.setJSONObjectFileContent(getString(R.string.api_token_cache), response);
+                doVehicleRequest(apiToken);
+            }
+        };
+        return listener;
+    }
+
+    private Response.Listener<JSONArray> getVehicleListener() {
+        Response.Listener<JSONArray> listener = new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                try {
+                    Log.d("vehicle response", response.toString());
+                    GasApi.setJSONArrayFileContent(getString(R.string.api_vehicle_cache), response);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        return listener;
     }
 
     public void onFinished(OAuthData data) {
@@ -328,20 +210,14 @@ public class Home extends Activity implements OAuthCallback {
             textview.setText("error, " + data.error);
         }
 
-        // You can access the tokens through data.token and data.secret
-
         textview.setText("loading...");
         textview.setTextColor(Color.parseColor("#00FF00"));
 
-        // Let's skip the NetworkOnMainThreadException for the purpose of this sample.
         StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().permitAll().build());
 
-        // To make an authenticated request, you can implement OAuthRequest with your prefered way.
-        // Here, we use an URLConnection (HttpURLConnection) but you can use any library.
         data.http(data.provider.equals("facebook") ? "/me" : "/plus/v1/people/me", new OAuthRequest(data) {
             private URL url;
             private URLConnection con;
-            private String email;
 
             @Override
             public void onSetURL(String _url) {
@@ -371,41 +247,7 @@ public class Home extends Activity implements OAuthCallback {
                         total.append(line);
                     }
                     JSONObject result = new JSONObject(total.toString());
-                    if (result.has("email")) {
-                        email = result.getString("email");
-                        Log.d("email", email);
-                    } else {
-                        JSONArray emails = result.getJSONArray("emails");
-                        JSONObject emailObj = emails.getJSONObject(0);
-                        try {
-                            email = emailObj.getString("value");
-                            Log.d("email", email);
-                        } catch (JSONException e) {
-                            Log.d("obj:", emailObj.toString());
-                        }
-                    }
-
-                    File file = new File(storagePath, getString(R.string.oauth_user_cache));
-                    if (!file.exists()) {
-                        try {
-                            file.createNewFile();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        file.delete();
-                        file.createNewFile();
-                    }
-                    String string = result.toString();
-                    FileOutputStream outputStream;
-
-                    try {
-                        outputStream = openFileOutput(getString(R.string.oauth_user_cache), Context.MODE_PRIVATE);
-                        outputStream.write(string.getBytes());
-                        outputStream.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    GasApi.setJSONObjectFileContent(getString(R.string.oauth_user_cache), result);
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -421,7 +263,6 @@ public class Home extends Activity implements OAuthCallback {
         Intent intent = getIntent();
         finish();
         startActivity(intent);
-
     }
 
 

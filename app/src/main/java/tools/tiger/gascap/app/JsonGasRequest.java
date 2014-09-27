@@ -1,5 +1,7 @@
 package tools.tiger.gascap.app;
 
+import android.util.Log;
+
 import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
 import com.android.volley.ParseError;
@@ -10,20 +12,19 @@ import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.Response.ErrorListener;
 import com.android.volley.Response.Listener;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import khandroid.ext.apache.http.HttpHeaders;
 
 /**
  * Created by jgreathouse on 9/24/2014.
  */
-public class JsonGasRequest extends Request<JSONObject> {
+public class JsonGasRequest extends Request {
 
     /** Charset for request. */
     private static final String PROTOCOL_CHARSET = "utf-8";
@@ -31,13 +32,13 @@ public class JsonGasRequest extends Request<JSONObject> {
     private static final String PROTOCOL_CONTENT_TYPE =
             String.format("application/json; charset=%s", PROTOCOL_CHARSET);
 
-    private Listener<JSONObject> listener;
+    private Listener listener;
     private Map<String, String> params;
     private String mRequestBody;
     private String apiToken;
 
     public JsonGasRequest(String url, String apiToken, Map<String, String> params,
-                         Listener<JSONObject> reponseListener, ErrorListener errorListener) {
+                         Listener reponseListener, ErrorListener errorListener) {
         super(Method.GET, url, errorListener);
         this.listener = reponseListener;
         this.params = params;
@@ -45,7 +46,7 @@ public class JsonGasRequest extends Request<JSONObject> {
     }
 
     public JsonGasRequest(int method, String url, String apiToken, Map<String, String> params,
-                         Listener<JSONObject> reponseListener, ErrorListener errorListener) {
+                         Listener reponseListener, ErrorListener errorListener) {
         super(method, url, errorListener);
         this.listener = reponseListener;
         this.params = params;
@@ -56,22 +57,6 @@ public class JsonGasRequest extends Request<JSONObject> {
             throws com.android.volley.AuthFailureError {
         return params;
     };
-
-    /**
-     * @deprecated Use {@link #getBodyContentType()}.
-     */
-    @Override
-    public String getPostBodyContentType() {
-        return getBodyContentType();
-    }
-
-    /**
-     * @deprecated Use {@link #getBody()}.
-     */
-    @Override
-    public byte[] getPostBody() {
-        return getBody();
-    }
 
     @Override
     public String getBodyContentType() {
@@ -94,19 +79,31 @@ public class JsonGasRequest extends Request<JSONObject> {
     @Override
     public Map<String, String> getHeaders() throws AuthFailureError {
         Map<String, String> headers = new HashMap<String, String>();
-        headers.put("Authorization", "Token " + apiToken);
-        headers.put("Content-Type", "application/json");
+        if (apiToken != null) {
+            headers.put("Authorization", "Token " + apiToken);
+        }
+        headers.put("Content-Type", getBodyContentType());
         VolleyLog.d(headers.toString());
         return headers;
     }
 
     @Override
-    protected Response<JSONObject> parseNetworkResponse(NetworkResponse response) {
+    protected Response parseNetworkResponse(NetworkResponse response) {
         try {
             String jsonString = new String(response.data,
                     HttpHeaderParser.parseCharset(response.headers));
-            return Response.success(new JSONObject(jsonString),
-                    HttpHeaderParser.parseCacheHeaders(response));
+            try {
+                return Response.success(new JSONObject(jsonString),
+                        HttpHeaderParser.parseCacheHeaders(response));
+            } finally {
+                try {
+                    return Response.success(new JSONArray(jsonString),
+                            HttpHeaderParser.parseCacheHeaders(response));
+                } catch (JSONException e) {
+                    Log.e("parseNetworkResponse", "Failed to parse as JSON: " + jsonString);
+                }
+            }
+
         } catch (UnsupportedEncodingException e) {
             return Response.error(new ParseError(e));
         } catch (JSONException je) {
@@ -115,8 +112,7 @@ public class JsonGasRequest extends Request<JSONObject> {
     }
 
     @Override
-    protected void deliverResponse(JSONObject response) {
-        // TODO Auto-generated method stub
+    protected void deliverResponse(Object response) {
         listener.onResponse(response);
     }
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
+    <!-- global -->
     <string name="app_name">GasCap</string>
     <string name="tigertools_api_protocol">http://</string>
     <string name="tigertools_api_endppoint">10.0.2.2</string>
@@ -9,17 +9,29 @@
     <string name="oauth_user_cache">oauth_user</string>
     <string name="api_vehicle_cache">api_vehicle</string>
     <string name="api_token_cache">api_token</string>
-    <string name="title_activity_my">Welcome</string>
+
+    <!-- settings -->
     <string name="action_settings">Settings</string>
-    <string name="log_fill_request_btn_txt">Log Fill</string>
-    <string name="title_activity_welcome">Welcome</string>
-    <string name="title_activity_home">GasCap</string>
+
+    <!-- io.Oauth -->
     <string name="login_facebook_button">Login With Facebook</string>
     <string name="login_google_button">Login With Google</string>
     <string name="title_activity_vehicle">Vehicle</string>
+
+    <!-- Home -->
+    <string name="title_activity_home">GasCap</string>
+    <string name="log_fill_request_btn_txt">Log Fill</string>
+
+    <!-- Vehicle -->
+    <string name="vehicle_form_title">Enter your vehicle information</string>
     <string name="vehicle_save_text">Save</string>
     <string name="vehicle_name_hint">Model</string>
     <string name="vehicle_make_hint">Make</string>
-    <string name="vehicle_form_title">Enter your vehicle information</string>
+
+    <!-- logFill -->
+    <string name="title_activity_log_fill">Log Fill</string>
+    <string name="log_fill_form_title">Log a new Gas Fill</string>
+    <string name="vehicle_add_text">New Vehicle</string>
+
 
 </resources>

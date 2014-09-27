@@ -7,18 +7,18 @@ import android.content.Context;
  * Created by jgreathouse on 9/18/2014.
  */
 
-public class App_Gas  extends Application {
+public class GasApp extends Application {
 
     private static Context context;
 
     public void onCreate(){
         super.onCreate();
-        App_Gas.context = getApplicationContext();
+        GasApp.context = getApplicationContext();
         init();
     }
 
     public static Context getAppContext() {
-        return App_Gas.context;
+        return GasApp.context;
     }
 
 

@@ -6,7 +6,7 @@
     android:weightSum="1">
 
     <Button
-        android:id="@+id/btn_log_fill_request"
+        android:id="@+id/log_fill_button"
         android:layout_width="fill_parent"
         android:layout_height="0dp"
         android:text="@string/log_fill_request_btn_txt"

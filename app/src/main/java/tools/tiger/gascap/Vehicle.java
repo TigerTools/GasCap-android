@@ -33,7 +33,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import tools.tiger.gascap.app.App_Gas;
+import tools.tiger.gascap.app.GasApi;
+import tools.tiger.gascap.app.GasApp;
 import tools.tiger.gascap.app.GasClient;
 import tools.tiger.gascap.app.JsonGasRequest;
 
@@ -41,14 +42,13 @@ import tools.tiger.gascap.app.JsonGasRequest;
 public class Vehicle extends Activity {
     private Integer vehicleId = 0;
     private String apiToken;
-    private String storagePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         Intent intent = getIntent();
         apiToken = intent.getStringExtra(Home.API_TOKEN);
+        doVehicleRequest(apiToken);
         if (vehicleId == 0) {
             setContentView(R.layout.activity_vehicle);
 
@@ -68,104 +68,60 @@ public class Vehicle extends Activity {
         }
     }
 
-    /** Called when the user clicks the Send button */
-    public void saveVehicle(final View view) {
-        final Intent intent = new Intent(this, Home.class);
-        storagePath = App_Gas.getAppContext().getFilesDir().getAbsolutePath();
-        App_Gas.getAppContext().getFilesDir().mkdirs();
-        EditText vehicleName = (EditText) findViewById(R.id.vehicleName);
-        EditText vehicleMake = (EditText) findViewById(R.id.vehicleMake);
-        Spinner vehicleYear = (Spinner)findViewById(R.id.vehicleYear);
-        String name = vehicleName.getText().toString();
-        String make = vehicleMake.getText().toString();
-        String year = vehicleYear.getSelectedItem().toString();
-
+    private void doVehicleRequest(String apiToken) {
         final RequestQueue queue = GasClient.getRequestQueue();
-        final String url = getString(R.string.tigertools_api_protocol)
-                + getString(R.string.tigertools_api_endppoint)
-                + ":" + getString(R.string.tigertools_api_port)
-                + "/gas/vehicles/";
+        String resource = "gas/vehicles/";
+        Response.Listener<JSONArray> listener = this.getVehicleListener();
+        JsonGasRequest vehicleReq = GasApi.request(Request.Method.GET, resource, apiToken, listener);
+        queue.add(vehicleReq);
+    }
 
-        HashMap<String, String> params = new HashMap<String, String>();
-        params.put("name", name);
-        params.put("make", make);
-        params.put("year", year);
-        Log.d("token", apiToken);
-        final JsonGasRequest vehicleReq = new JsonGasRequest(Request.Method.POST,
-            url,
-            apiToken,
-            params,
-            new Response.Listener<JSONObject>() {
+    private Response.Listener<JSONArray> getVehicleListener() {
+        final Intent intent = new Intent(this, Home.class);
+        Response.Listener<JSONArray> listener = new Response.Listener<JSONArray>() {
             @Override
-                public void onResponse(JSONObject response) {
-                    String ApiMessage = response.toString();
-                    Log.d("raw_vehicle_resp", ApiMessage);
+            public void onResponse(JSONArray response) {
+                try {
+                    Log.d("getVehicleListener", response.toString());
                     if (response.length() > 0) {
-
-                        JsonArrayRequest vehiclesReq = new JsonArrayRequest(
-                                url,
-                                new Response.Listener<JSONArray>() {
-                                    @Override
-                                    public void onResponse(JSONArray response) {
-                                        try {
-                                            File file = new File(storagePath, getString(R.string.api_vehicle_cache));
-                                            if (!file.exists()) {
-                                                try {
-                                                    file.createNewFile();
-                                                } catch (IOException e) {
-                                                    e.printStackTrace();
-                                                }
-                                            } else {
-                                                file.delete();
-                                                file.createNewFile();
-                                            }
-                                            String string = response.toString();
-                                            FileOutputStream outputStream;
-
-                                            try {
-                                                outputStream = openFileOutput(getString(R.string.api_vehicle_cache), Context.MODE_PRIVATE);
-                                                outputStream.write(string.getBytes());
-                                                outputStream.close();
-                                                startActivity(intent);
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                            }
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                },
-                                new Response.ErrorListener() {
-                                    @Override
-                                    public void onErrorResponse(VolleyError error) {
-                                        Log.d("token", "Remote Call Failed");
-                                    }
-                                }) {
-                            @Override
-                            public Map<String, String> getHeaders() throws AuthFailureError {
-                                Map<String, String> headers = new HashMap<String, String>();
-                                headers.put("Authorization", "Token " + apiToken);
-                                headers.put("Content-Type", "application/json");
-                                VolleyLog.d(headers.toString());
-                                return headers;
-                        }};
-                        queue.add(vehiclesReq);
-                    } else {
-                        ((TextView) findViewById(R.id.vehicle_form_result)).setText(ApiMessage);
+                        GasApi.setJSONArrayFileContent(getString(R.string.api_vehicle_cache), response);
+                        intent.putExtra(Home.API_TOKEN, apiToken);
+                        startActivity(intent);
                     }
-                }
-            },
-            new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.d("JsonGasRequest", "Remote Call Failed");
-                    Log.d("JsonGasRequest", error.toString());
-                    ((TextView) findViewById(R.id.vehicle_form_result)).setText(error.toString());
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
-        );
-        queue.add(vehicleReq);
+        };
+        return listener;
+    }
 
+    private Response.Listener<JSONObject> getVehicleSaveListener() {
+        Response.Listener<JSONObject> listener = new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    Log.d("getVehicleSaveListener", response.toString());
+                    doVehicleRequest(apiToken);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        return listener;
+    }
+
+    /** Called when the user clicks the Send button */
+    public void saveVehicle(final View view) {
+        final RequestQueue queue = GasClient.getRequestQueue();
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("name", ((EditText) findViewById(R.id.vehicleName)).getText().toString());
+        params.put("make", ((EditText) findViewById(R.id.vehicleMake)).getText().toString());
+        params.put("year", ((Spinner)findViewById(R.id.vehicleYear)).getSelectedItem().toString());
+        String resource = "gas/vehicles/";
+        Response.Listener<JSONObject> listener = this.getVehicleSaveListener();
+        JsonGasRequest vehicleReq = GasApi.request(Request.Method.POST, resource, apiToken, listener, params);
+        queue.add(vehicleReq);
     }
 
 
