@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <!-- global -->
     <string name="app_name">GasCap</string>
     <string name="tigertools_api_protocol">http://</string>
@@ -32,6 +33,7 @@
     <string name="title_activity_log_fill">Log Fill</string>
     <string name="log_fill_form_title">Log a new Gas Fill</string>
     <string name="vehicle_add_text">New Vehicle</string>
-
+    <string name="title_activity_google_auth">Google Auth</string>
+    <string name="hello_world">Hello world!</string>
 
 </resources>

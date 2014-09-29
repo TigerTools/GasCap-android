@@ -15,15 +15,20 @@ import com.android.volley.VolleyError;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 
 import tools.tiger.gascap.R;
@@ -99,6 +104,51 @@ public class GasApi {
             }
         };
         return listener;
+    }
+
+    public static String getShaFingerprint(Activity activity, String appId) {
+        StringBuffer fp = new StringBuffer();;
+        try {
+            PackageInfo info = activity.getPackageManager().getPackageInfo(appId, PackageManager.GET_SIGNATURES);
+
+            Signature[] signatures = info.signatures;
+
+            byte[] cert = signatures[0].toByteArray();
+
+            InputStream input = new ByteArrayInputStream(cert);
+
+            CertificateFactory cf = null;
+            try {
+                cf = CertificateFactory.getInstance("X509");
+
+
+            } catch (CertificateException e) {
+                e.printStackTrace();
+            }
+            X509Certificate c = null;
+            try {
+                c = (X509Certificate) cf.generateCertificate(input);
+            } catch (CertificateException e) {
+                e.printStackTrace();
+            }
+
+            for (Signature signature : info.signatures) {
+                MessageDigest md = MessageDigest.getInstance("SHA1");
+                byte[] publicKey = md.digest(c.getPublicKey().getEncoded());
+
+                for (int i=0;i<publicKey.length;i++) {
+                    String appendString = Integer.toHexString(0xFF & publicKey[i]);
+                    if(appendString.length()==1)fp.append("0");
+                    fp.append(appendString);
+                }
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        Log.d("fingerprint:", fp.toString());
+        return fp.toString();
     }
 
     public static String getHash(Activity activity, String appId) {

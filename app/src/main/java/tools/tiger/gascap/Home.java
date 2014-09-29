@@ -20,19 +20,19 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLEncoder;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
 
 import io.oauth.OAuth;
 import io.oauth.OAuthCallback;
 import io.oauth.OAuthData;
 import io.oauth.OAuthRequest;
-
 import tools.tiger.gascap.app.GasApi;
+import tools.tiger.gascap.app.GasApp;
 import tools.tiger.gascap.app.GasClient;
 import tools.tiger.gascap.app.JsonGasRequest;
 
@@ -151,12 +151,14 @@ public class Home extends Activity implements OAuthCallback {
                     o.popup("facebook", Home.this); // Launch the pop up with the right provider & callback
                 }
             });
-
+            final Intent googleAuthIntent = new Intent(GasApp.getAppContext(), GoogleAuth.class);
             googleButton.setOnClickListener(new View.OnClickListener() { // Listen the on click event
                 @Override
                 public void onClick(View v)
                 {
-                    o.popup("google", Home.this); // Launch the pop up with the right provider & callback
+                    //o.popup("google", Home.this); // Launch the pop up with the right provider & callback
+
+                    startActivity(googleAuthIntent);
                 }
             });
         }
