@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="google_maps_key_instructions">
+        <!--
+    TODO: Before you run your application, you need a Google Maps API key.
+
+    To get one, follow this link, follow the directions and press "Create" at the end:
+
+https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=88:6A:39:EE:D1:B2:A8:2C:F8:3F:B4:4E:78:45:78:9F:B2:C2:F9:B5%3Btools.tiger.gascap
+
+    You can also add your credentials to an existing key, using this line:
+    88:6A:39:EE:D1:B2:A8:2C:F8:3F:B4:4E:78:45:78:9F:B2:C2:F9:B5;tools.tiger.gascap
+
+    Once you have your key (it starts with "AIza"), replace the "google_maps_key"
+    string in this file.
+        -->
+    </string>
+    <string name="google_maps_key" templateMergeStrategy="preserve">AIzaSyCvXPTwC_bXCg40UlcJKR03H1_kcSKAv-Y</string>
+
+</resources>

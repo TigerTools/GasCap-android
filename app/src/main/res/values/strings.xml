@@ -7,7 +7,6 @@
     <string name="tigertools_api_endppoint">10.0.2.2</string>
     <string name="tigertools_api_port">8000</string>
     <string name="cache_dir">cache</string>
-    <string name="oauth_user_cache">oauth_user</string>
     <string name="api_vehicle_cache">api_vehicle</string>
     <string name="api_token_cache">api_token</string>
 
@@ -17,13 +16,13 @@
     <!-- io.Oauth -->
     <string name="login_facebook_button">Login With Facebook</string>
     <string name="login_google_button">Login With Google</string>
-    <string name="title_activity_vehicle">Vehicle</string>
 
     <!-- Home -->
-    <string name="title_activity_home">GasCap</string>
+    <string name="title_activity_home">Home</string>
     <string name="log_fill_request_btn_txt">Log Fill</string>
 
     <!-- Vehicle -->
+    <string name="title_activity_vehicle">Vehicle</string>
     <string name="vehicle_form_title">Enter your vehicle information</string>
     <string name="vehicle_save_text">Save</string>
     <string name="vehicle_name_hint">Model</string>
@@ -32,8 +31,12 @@
     <!-- logFill -->
     <string name="title_activity_log_fill">Log Fill</string>
     <string name="log_fill_form_title">Log a new Gas Fill</string>
-    <string name="vehicle_add_text">New Vehicle</string>
+    <string name="vehicle_add_text">Add Vehicle</string>
+    <string name="location_button_text">Location</string>
+
+    <!-- GoogleAuth -->
     <string name="title_activity_google_auth">Google Auth</string>
     <string name="hello_world">Hello world!</string>
+    <string name="title_activity_location">Location</string>
 
 </resources>

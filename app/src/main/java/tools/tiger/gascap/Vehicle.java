@@ -38,17 +38,19 @@ import tools.tiger.gascap.app.GasApp;
 import tools.tiger.gascap.app.GasClient;
 import tools.tiger.gascap.app.JsonGasRequest;
 
-
 public class Vehicle extends Activity {
-    private Integer vehicleId = 0;
     private String apiToken;
+    private  Response.Listener vehicleListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        Integer vehicleId = 0;
         Intent intent = getIntent();
+        vehicleListener = getVehicleListener();
+        super.onCreate(savedInstanceState);
         apiToken = intent.getStringExtra(Home.API_TOKEN);
-        doVehicleRequest(apiToken);
+
+        GasApi.getVehiclesRequest(apiToken, vehicleListener);
         if (vehicleId == 0) {
             setContentView(R.layout.activity_vehicle);
 
@@ -68,12 +70,13 @@ public class Vehicle extends Activity {
         }
     }
 
-    private void doVehicleRequest(String apiToken) {
-        final RequestQueue queue = GasClient.getRequestQueue();
-        String resource = "gas/vehicles/";
-        Response.Listener<JSONArray> listener = this.getVehicleListener();
-        JsonGasRequest vehicleReq = GasApi.request(Request.Method.GET, resource, apiToken, listener);
-        queue.add(vehicleReq);
+    public void saveVehicle(final View view) {
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("name", ((EditText) findViewById(R.id.vehicleName)).getText().toString());
+        params.put("make", ((EditText) findViewById(R.id.vehicleMake)).getText().toString());
+        params.put("year", ((Spinner)findViewById(R.id.vehicleYear)).getSelectedItem().toString());
+        Response.Listener<JSONObject> listener = this.getVehicleSaveListener();
+        GasApi.saveVehicleRequest(apiToken, listener, params);
     }
 
     private Response.Listener<JSONArray> getVehicleListener() {
@@ -102,7 +105,7 @@ public class Vehicle extends Activity {
             public void onResponse(JSONObject response) {
                 try {
                     Log.d("getVehicleSaveListener", response.toString());
-                    doVehicleRequest(apiToken);
+                    GasApi.getVehiclesRequest(apiToken, vehicleListener);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -110,20 +113,6 @@ public class Vehicle extends Activity {
         };
         return listener;
     }
-
-    /** Called when the user clicks the Send button */
-    public void saveVehicle(final View view) {
-        final RequestQueue queue = GasClient.getRequestQueue();
-        HashMap<String, String> params = new HashMap<String, String>();
-        params.put("name", ((EditText) findViewById(R.id.vehicleName)).getText().toString());
-        params.put("make", ((EditText) findViewById(R.id.vehicleMake)).getText().toString());
-        params.put("year", ((Spinner)findViewById(R.id.vehicleYear)).getSelectedItem().toString());
-        String resource = "gas/vehicles/";
-        Response.Listener<JSONObject> listener = this.getVehicleSaveListener();
-        JsonGasRequest vehicleReq = GasApi.request(Request.Method.POST, resource, apiToken, listener, params);
-        queue.add(vehicleReq);
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

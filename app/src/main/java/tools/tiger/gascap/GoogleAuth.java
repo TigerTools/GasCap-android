@@ -25,14 +25,14 @@ public class GoogleAuth extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_google_auth);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         if (checkPlayServices() && checkUserAccount()) {
-            // Then we're good to go!
+            Intent homeIntent = new Intent(this, Home.class);
+            startActivity(homeIntent);
         }
     }
 
@@ -88,7 +88,12 @@ public class GoogleAuth extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_CODE_RECOVER_PLAY_SERVICES:
-      /* ... */
+                if (resultCode == RESULT_CANCELED) {
+                    Toast.makeText(this, "Google Play Services must be installed.",
+                            Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                return;
             case REQUEST_CODE_PICK_ACCOUNT:
                 if (resultCode == RESULT_OK) {
                     String accountName = data.getStringExtra(

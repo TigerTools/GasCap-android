@@ -9,6 +9,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.android.volley.Request;
+import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
@@ -86,7 +87,37 @@ public class GasApi {
         return GasApi.request(Request.Method.GET, resource, apiToken, listener, params);
     }
 
-    private static Response.Listener<JSONObject> JSONObjectListener() {
+    public static void getVehiclesRequest(Integer method, String apiToken, Response.Listener listener, HashMap<String, String> params) {
+        final RequestQueue queue = GasClient.getRequestQueue();
+        String resource = "gas/vehicles/";
+        JsonGasRequest vehicleReq = GasApi.request(method, resource, apiToken, listener, params);
+        queue.add(vehicleReq);
+    }
+
+    public static void getVehiclesRequest(Integer method, String apiToken, Response.Listener listener) {
+        HashMap<String, String> params = new HashMap<String, String>();
+        getVehiclesRequest(method, apiToken, listener, params);
+    }
+
+    public static void getVehiclesRequest(String apiToken, Response.Listener listener) {
+        Integer method = Request.Method.GET;
+        getVehiclesRequest(method, apiToken, listener);
+    }
+
+    public static void getVehicleByIdRequest(Integer vehicleId, String apiToken, Response.Listener listener) {
+        Integer method = Request.Method.GET;
+        final RequestQueue queue = GasClient.getRequestQueue();
+        String resource = "gas/vehicles/" + vehicleId.toString() + "/";
+        JsonGasRequest vehicleReq = GasApi.request(method, resource, apiToken, listener);
+        queue.add(vehicleReq);
+    }
+
+    public static void saveVehicleRequest(String apiToken, Response.Listener listener, HashMap<String, String> params) {
+        Integer method = Request.Method.POST;
+        getVehiclesRequest(method, apiToken, listener, params);
+    }
+
+    public static Response.Listener<JSONObject> JSONObjectListener() {
         Response.Listener listener = new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -96,7 +127,7 @@ public class GasApi {
         return listener;
     }
 
-    private static Response.Listener<JSONArray> JSONArrayListener() {
+    public static Response.Listener<JSONArray> JSONArrayListener() {
         Response.Listener listener = new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
@@ -104,51 +135,6 @@ public class GasApi {
             }
         };
         return listener;
-    }
-
-    public static String getShaFingerprint(Activity activity, String appId) {
-        StringBuffer fp = new StringBuffer();;
-        try {
-            PackageInfo info = activity.getPackageManager().getPackageInfo(appId, PackageManager.GET_SIGNATURES);
-
-            Signature[] signatures = info.signatures;
-
-            byte[] cert = signatures[0].toByteArray();
-
-            InputStream input = new ByteArrayInputStream(cert);
-
-            CertificateFactory cf = null;
-            try {
-                cf = CertificateFactory.getInstance("X509");
-
-
-            } catch (CertificateException e) {
-                e.printStackTrace();
-            }
-            X509Certificate c = null;
-            try {
-                c = (X509Certificate) cf.generateCertificate(input);
-            } catch (CertificateException e) {
-                e.printStackTrace();
-            }
-
-            for (Signature signature : info.signatures) {
-                MessageDigest md = MessageDigest.getInstance("SHA1");
-                byte[] publicKey = md.digest(c.getPublicKey().getEncoded());
-
-                for (int i=0;i<publicKey.length;i++) {
-                    String appendString = Integer.toHexString(0xFF & publicKey[i]);
-                    if(appendString.length()==1)fp.append("0");
-                    fp.append(appendString);
-                }
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        Log.d("fingerprint:", fp.toString());
-        return fp.toString();
     }
 
     public static String getHash(Activity activity, String appId) {
