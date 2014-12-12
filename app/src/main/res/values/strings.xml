@@ -18,7 +18,7 @@
     <string name="login_google_button">Login With Google</string>
 
     <!-- Home -->
-    <string name="title_activity_home">Home</string>
+    <string name="title_activity_home">GasCap</string>
     <string name="log_fill_request_btn_txt">Log Fill</string>
 
     <!-- Vehicle -->
